@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #faf9f5;   /* warm paper */
+    --surface: #ffffff;
+    --line:    #e6e2d8;
+    --line-2:  #d8d3c6;
+    --ink:     #2d2a26;
+    --ink-2:   #6f6a60;
+    --ink-3:   #9c968a;
+    --accent:  #c15f3c;   /* terracotta */
+    --accent-2:#a94f2f;
+    --ok:      #4c7a5a;
+    --radius:  10px;
+    --shadow:  0 1px 2px rgba(45,42,38,.05), 0 4px 14px rgba(45,42,38,.05);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; }
+  body {
+    background:var(--bg); color:var(--ink);
+    font-family:'Public Sans',-apple-system,sans-serif; font-size:14px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection { background:#f3ddd2; }
+
+  /* ============ LOGIN ============ */
+  #loginView {
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .login-card {
+    width:100%; max-width:380px; background:var(--surface);
+    border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow);
+    padding:40px 36px 36px;
+  }
+  .brand { font-family:'Fraunces',serif; font-size:24px; font-weight:600; letter-spacing:-.01em; }
+  .brand .dot { color:var(--accent); }
+  .login-sub { color:var(--ink-2); font-size:13px; margin:6px 0 28px; }
+  label.fld { display:block; font-size:12px; font-weight:600; color:var(--ink-2); text-transform:uppercase; letter-spacing:.06em; margin:0 0 6px; }
+  input[type=text], input[type=password], textarea, select {
+    width:100%; font-family:inherit; font-size:14px; color:var(--ink);
+    background:var(--surface); border:1px solid var(--line-2); border-radius:8px;
+    padding:9px 12px; outline:none; transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(193,95,60,.12); }
+  textarea { resize:vertical; min-height:60px; }
+  select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236f6a60' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; cursor:pointer; }
+  .fgroup { margin-bottom:16px; }
+  .btn {
+    font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;
+    border:1px solid transparent; border-radius:8px; padding:9px 18px;
+    transition:background .15s, border-color .15s, transform .05s;
+  }
+  .btn:active { transform:translateY(1px); }
+  .btn-primary { background:var(--accent); color:#fff; width:100%; padding:11px 18px; }
+  .btn-primary:hover { background:var(--accent-2); }
+  .btn-ghost { background:transparent; color:var(--ink-2); border-color:var(--line-2); }
+  .btn-ghost:hover { border-color:var(--ink-3); color:var(--ink); }
+  .btn-sm { font-size:13px; padding:7px 14px; }
+  .err { color:#b13c2e; font-size:13px; margin-top:12px; min-height:18px; }
+
+  /* ============ APP SHELL ============ */
+  #appView { display:none; min-height:100vh; }
+  .topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; border-bottom:1px solid var(--line); background:var(--bg);
+    position:sticky; top:0; z-index:10;
+  }
+  .topbar .brand { font-size:18px; }
+  .top-right { display:flex; align-items:center; gap:14px; }
+  .userchip { font-size:13px; color:var(--ink-2); }
+  .userchip b { color:var(--ink); font-weight:600; }
+  .nav { display:flex; gap:4px; }
+  .nav button {
+    font-family:inherit; font-size:13px; font-weight:500; color:var(--ink-2);
+    background:transparent; border:none; border-radius:7px; padding:7px 14px; cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  .nav button:hover { background:#f1eee6; color:var(--ink); }
+  .nav button.on { background:#f1eee6; color:var(--accent-2); font-weight:600; }
+
+  .layout { display:flex; gap:24px; padding:24px 28px; align-items:flex-start; max-width:1360px; margin:0 auto; }
+  .col-form { width:340px; flex:0 0 340px; }
+  .col-prev { flex:1 1 auto; min-width:0; }
+
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; margin-bottom:16px; }
+  .card h3 { font-family:'Fraunces',serif; font-size:15px; font-weight:600; margin-bottom:14px; color:var(--ink); }
+  .row2 { display:flex; gap:10px; } .row2 > div { flex:1; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .status { font-size:13px; color:var(--ok); margin-top:10px; min-height:18px; }
+  .status.bad { color:#b13c2e; }
+
+  /* ============ PREVIEW ============ */
+  .prev-label { font-size:12px; font-weight:600; color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; }
+  .paper-scroll { max-height:calc(100vh - 130px); overflow:auto; padding:4px 4px 24px; }
+  .letter {
+    --top-letterhead:2.35in; position:relative; width:8.5in; min-height:11in; background:#fff;
+    margin:0 auto; box-shadow:0 2px 6px rgba(45,42,38,.08), 0 12px 32px rgba(45,42,38,.10);
+    border-radius:2px;
+    padding:var(--top-letterhead) 0.75in 0.5in 1.0in;
+    font-family:"Times New Roman",Times,serif; font-size:12pt; line-height:1.2; color:#000;
+  }
+  .letter .refrow { display:flex; justify-content:flex-end; }
+  .letter .refrow.t2date { position:absolute; top:1.7in; right:0.2in; margin:0; }
+  .letter .title { text-align:center; font-weight:bold; text-decoration:underline; margin:10px 0 10px 0; }
+  .letter p.body { text-align:justify; margin:0 0 8px 0; line-height:1.3; }
+  .letter .fees { font-weight:bold; text-decoration:underline; margin:2px 0 4px 0; }
+  .feewrap { display:flex; gap:0.3in; }
+  .feecol { flex:1 1 50%; min-width:0; }
+  .yr { font-weight:bold; text-decoration:underline; margin:11px 0 3px 0; }
+  table.fee { border-collapse:collapse; width:100%; line-height:1.3; }
+  table.fee td { padding:0; font-size:12pt; vertical-align:top; }
+  table.fee td.num { width:0.45in; }
+  table.fee td.amt { text-align:right; width:0.95in; white-space:nowrap; }
+  table.fee .hdr td.h, table.fee .hdr td.amt { font-weight:bold; border-bottom:1px solid #000; }
+  table.fee .tot td.totlbl { font-weight:bold; text-align:center; }
+  table.fee .tot td.amt { font-weight:bold; }
+  table.fee2 { border-collapse:collapse; margin:16px 0 16px 0.1in; line-height:1.35; }
+  table.fee2 td { padding:0; font-size:12pt; }
+  table.fee2 td.part { width:2.2in; } table.fee2 td.amt2 { width:1.6in; }
+  table.fee2 .hdr td, table.fee2 .tot td { font-weight:bold; }
+  .inwords { font-weight:bold; margin:0 0 16px 0; }
+  .lastdate { margin:0 0 14px 0; }
+  .purpose { margin:0 0 8px 0; }
+  .letter .sign { font-weight:bold; margin-top:0.6in; }
+  .letter .sign.s1 { font-size:11pt; margin-top:16px; }
+  .letter .sign.s1.pg { margin-top:1.1in; }
+  .letter .sign .ind { padding-left:2.2em; }
+  .letter .note { font-weight:bold; font-size:11pt; margin-top:14px; line-height:1.3; }
+  .letter .note .l2 { padding-left:2.8em; }
+  .bankhdr { font-weight:bold; text-decoration:underline; font-size:10pt; margin:20px 0 3px 0; }
+  table.bank { border-collapse:collapse; line-height:1.3; margin:0 0 8px 0.05in; }
+  table.bank td { font-size:10pt; padding:0; vertical-align:top; }
+  table.bank td.lbl { width:1.5in; } table.bank td.col { width:0.25in; }
+  table.bank td.val { font-weight:bold; }
+
+  /* ============ ACTIVITY LOG ============ */
+  #logView { display:none; padding:24px 28px; max-width:1100px; margin:0 auto; }
+  .log-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
+  .log-head h2 { font-family:'Fraunces',serif; font-size:22px; font-weight:600; }
+  .log-head .sub { color:var(--ink-2); font-size:13px; }
+  table.logtbl { width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
+  table.logtbl th {
+    text-align:left; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--ink-3); padding:10px 14px; border-bottom:1px solid var(--line); background:#fcfbf8;
+  }
+  table.logtbl td { padding:10px 14px; border-bottom:1px solid #f0ede5; font-size:13px; vertical-align:top; }
+  table.logtbl tr:last-child td { border-bottom:none; }
+  table.logtbl tr:hover td { background:#fcfbf7; }
+  .pill { display:inline-block; font-size:11px; font-weight:600; padding:2px 9px; border-radius:99px; letter-spacing:.03em; }
+  .pill.letter { background:#f6e3da; color:var(--accent-2); }
+  .pill.login  { background:#e5eee8; color:var(--ok); }
+  .pill.logout { background:#efece4; color:var(--ink-2); }
+  .empty { text-align:center; color:var(--ink-3); padding:48px 20px; font-size:14px; }
+  .tblwrap { border-radius:var(--radius); overflow:auto; max-height:calc(100vh - 190px); }
+
+  /* ============ PRINT ============ */
+  @media print {
+    body { background:#fff; }
+    .topbar, .col-form, .prev-label, #logView, .no-print { display:none !important; }
+    #appView { display:block !important; }
+    .layout { display:block; padding:0; margin:0; max-width:none; }
+    .col-prev { width:100%; }
+    .paper-scroll { max-height:none; overflow:visible; padding:0; }
+    .letter { width:auto; min-height:auto; margin:0; box-shadow:none; border-radius:0; }
+    @page { size:Letter portrait; margin:0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginView">
+  <div class="login-card">
+    <div class="brand">Loan Letters<span class="dot">.</span></div>
+    <div class="login-sub">Sign in to continue</div>
+    <div class="fgroup">
+      <label class="fld">Username</label>
+      <input type="text" id="l_user" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="fgroup">
+      <label class="fld">Password</label>
+      <input type="password" id="l_pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Sign in</button>
+    <div class="err" id="l_err"></div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="appView">
+  <div class="topbar no-print">
+    <div class="brand">Loan Letters<span class="dot">.</span></div>
+    <div class="nav">
+      <button id="navGen" class="on" onclick="showTab('gen')">Generator</button>
+      <button id="navLog" onclick="showTab('log')">Activity Log</button>
+    </div>
+    <div class="top-right">
+      <span class="userchip">Signed in as <b id="whoami"></b></span>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <!-- Generator -->
+  <div id="genView">
+    <div class="layout">
+      <div class="col-form no-print">
+
+        <div class="card">
+          <h3>Letter</h3>
+          <div class="row2">
+            <div class="fgroup">
+              <label class="fld">Level</label>
+              <select id="f_level" onchange="onLevel()">
+                <option value="UG">UG — MBBS</option>
+                <option value="PG">PG — MD / MS</option>
+              </select>
+            </div>
+            <div class="fgroup">
+              <label class="fld">Type</label>
+              <select id="f_type" onchange="toggleType()">
+                <option value="1">Type 1 — All Years</option>
+                <option value="2">Type 2 — Yearly + Bank</option>
+              </select>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="fgroup">
+              <label class="fld">Batch</label>
+              <select id="f_preset" onchange="onPreset()"></select>
+            </div>
+            <div class="fgroup only2">
+              <label class="fld">Year</label>
+              <select id="f_year" onchange="buildLetter()">
+                <option value="Second">Second (2nd)</option>
+                <option value="Third">Third (3rd)</option>
+                <option value="Fourth">Fourth (4th)</option>
+                <option value="Final">Final</option>
+              </select>
+            </div>
+          </div>
+          <div class="fgroup pgocc" style="display:none">
+            <label class="fld">Hostel</label>
+            <select id="f_occ" onchange="buildLetter()">
+              <option value="Double">Double Occupancy</option>
+              <option value="Single">Single Occupancy</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Student</h3>
+          <div class="row2">
+            <div class="fgroup">
+              <label class="fld">Gender</label>
+              <select id="f_gender" onchange="buildLetter()">
+                <option value="M">Male</option><option value="F">Female</option>
+              </select>
+            </div>
+            <div class="fgroup">
+              <label class="fld" id="lbl_course">Course</label>
+              <input type="text" id="f_course" value="MBBS">
+            </div>
+          </div>
+          <div class="fgroup">
+            <label class="fld">Student name</label>
+            <input type="text" id="f_name" placeholder="e.g. Gore Vedant Nitin">
+          </div>
+          <div class="fgroup">
+            <label class="fld">Father's name</label>
+            <input type="text" id="f_father" placeholder="e.g. Nitin">
+          </div>
+          <div class="fgroup">
+            <label class="fld">Address (R/o)</label>
+            <textarea id="f_addr" placeholder="Full address with city, district, state"></textarea>
+          </div>
+          <div class="row2">
+            <div class="fgroup">
+              <label class="fld">Pin code</label>
+              <input type="text" id="f_pin" placeholder="422010">
+            </div>
+            <div class="fgroup">
+              <label class="fld">Date</label>
+              <input type="text" id="f_date" value="">
+            </div>
+          </div>
+          <div class="fgroup only2">
+            <label class="fld">Last fee date</label>
+            <input type="text" id="f_lastdate" value="31.07.2026">
+          </div>
+          <div class="fgroup only1">
+            <label class="fld">Counseling</label>
+            <input type="text" id="f_counsel" value="UPNEET 2025">
+          </div>
+          <div class="row2 only1">
+            <div class="fgroup ugonly">
+              <label class="fld">Admission year</label>
+              <input type="text" id="f_admyr" value="first year">
+            </div>
+            <div class="fgroup">
+              <label class="fld">Session</label>
+              <input type="text" id="f_session" value="2025-2026">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="actions">
+            <button class="btn btn-primary" style="width:auto" onclick="printRecord()">Print &amp; save</button>
+            <button class="btn btn-ghost" onclick="window.print()">Print only</button>
+            <button class="btn btn-ghost" onclick="resetForm()">Clear</button>
+          </div>
+          <div class="status" id="status"></div>
+        </div>
+
+      </div>
+
+      <div class="col-prev">
+        <div class="prev-label no-print">Live preview — click inside to fine-tune</div>
+        <div class="paper-scroll">
+          <div class="letter" id="letter" contenteditable="true" spellcheck="false">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Log -->
+  <div id="logView">
+    <div class="log-head">
+      <div>
+        <h2>Activity Log</h2>
+        <div class="sub">Every sign-in and issued letter, newest first.</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="loadActivity()">Refresh</button>
+    </div>
+    <div class="tblwrap">
+      <table class="logtbl">
+        <thead>
+          <tr><th>Time</th><th>User</th><th>Action</th><th>Student</th><th>Details</th></tr>
+        </thead>
+        <tbody id="logBody">
+          <tr><td colspan="5" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+var CFG = null, TOKEN = null;
+
+/* ---------- offline fallback fees (same data as before) ---------- */
+var UG_FEES = {
+  '2025-2026': { first:[['Tuition Fee',1228240],['Security',300000],['Hostel Fee',202125],['Miscellaneous Exp',94160]], recur:[['Tuition Fee',1228240],['Hostel Fee',202125],['Miscellaneous Exp',94160]], final:[['Tuition Fee',614120],['Hostel Fee',202125],['Miscellaneous Exp',94160]] },
+  '2024-2025': { first:[['Tuition Fee',1228240],['Security',300000],['Hostel Fee',192500],['Miscellaneous Exp',94160]], recur:[['Tuition Fee',1228240],['Hostel Fee',192500],['Miscellaneous Exp',94160]], final:[['Tuition Fee',614120],['Hostel Fee',192500],['Miscellaneous Exp',94160]] },
+  '2023-2024': { first:[['Tuition Fee',1228240],['Security',300000],['Hostel Fee',175000],['Miscellaneous Exp',85600]], recur:[['Tuition Fee',1228240],['Hostel Fee',175000],['Miscellaneous Exp',85600]], final:[['Tuition Fee',614120],['Hostel Fee',175000],['Miscellaneous Exp',85600]] },
+  '2022-2023': { first:[['Tuition Fee',1228240],['Security',300000],['Hostel Fee',175000],['Miscellaneous Exp',85600]], recur:[['Tuition Fee',1228240],['Hostel Fee',175000],['Miscellaneous Exp',85600]], final:[['Tuition Fee',614120],['Hostel Fee',175000],['Miscellaneous Exp',85600]] }
+};
+var PG_FEES = {
+  '2025-2026': { first:[['Tuition Fee',2163946],['Security',500000],['Hostel Fee',242550,346500],['Miscellaneous Exp',141240]], recur:[['Tuition Fee',2163946],['Hostel Fee',242550,346500],['Miscellaneous Exp',141240]] },
+  '2024-2025': { first:[['Tuition Fee',2163946],['Security',500000],['Hostel Fee',330000],['Miscellaneous Exp',141240]], recur:[['Tuition Fee',2163946],['Hostel Fee',330000],['Miscellaneous Exp',141240]] },
+  '2023-2024': { first:[['Tuition Fee',2163946],['Security',500000],['Hostel Fee',300000],['Miscellaneous Exp',128400]], recur:[['Tuition Fee',2163946],['Hostel Fee',300000],['Miscellaneous Exp',128400]] }
+};
+function expandFees(level, BF){
+  var labels={First:'First Year :',Second:'Second Year :',Third:'Third Year :',Fourth:'Fourth Year :',Final:'Final Year'};
+  var out={};
+  Object.keys(BF).sort().reverse().forEach(function(b){ var y=BF[b]; out[b]=[];
+    var defs = (level==="PG") ? [['First',y.first],['Second',y.recur],['Third',y.recur]]
+                              : [['First',y.first],['Second',y.recur],['Third',y.recur],['Fourth',y.recur],['Final',y.final]];
+    defs.forEach(function(d){ out[b].push({ label:labels[d[0]], year:d[0], rows:d[1].map(function(r,i){ return [(i+1)+'.', r[0], r[1], r[2]||'']; }) }); });
+  });
+  return out;
+}
+var FALLBACK_CFG = {
+  fees: { UG: expandFees('UG',UG_FEES), PG: expandFees('PG',PG_FEES) },
+  bank1: { name:'K. D. Medical College, Hospital & Research Center, Mathura', bank:'Punjab National Bank,', ac:'1 4 7 7 1 1 3 1 0 0 0 7 9 7', branch:'G L Bajaj College, Akbarpur, Mathura', rtgs:'PUNB0147710' },
+  bank2: { name:'Rajiv Memorial Academic Welfare Society', bank:'IDFC First Bank,', ac:'10167984841', branch:'Mathura', rtgs:'IDFB0021752' }
+};
+
+/* ---------- helpers ---------- */
+function gv(id){ return document.getElementById(id).value; }
+function setVal(id,v){ var e=document.getElementById(id); if(e) e.value=v; }
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function properCase(s){ return String(s||"").replace(/\S+/g, function(w){ return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase(); }); }
+function todayStr(){ var d=new Date(); return ("0"+d.getDate()).slice(-2)+"."+("0"+(d.getMonth()+1)).slice(-2)+"."+d.getFullYear(); }
+function inComma(n){ n=Math.round(Number(n)||0); var s=String(n); if(s.length<=3) return s; var l=s.slice(-3), r=s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,","); return r+","+l; }
+function t1amt(n){ return inComma(n)+".00"; }
+function t2amt(n){ return inComma(n)+"/-"; }
+function effAmt(r){ var e=document.getElementById('f_occ'); return (e && e.value==="Single" && r[3]) ? Number(r[3]) : Number(r[2]); }
+function sumRows(rows){ var t=0; for(var i=0;i<rows.length;i++) t+=effAmt(rows[i])||0; return t; }
+function findHead(rows,key){ for(var i=0;i<rows.length;i++){ if(String(rows[i][1]).toLowerCase().indexOf(key)>=0) return effAmt(rows[i])||0; } return 0; }
+function hasOcc(){ var ys=curFees(); for(var i=0;i<ys.length;i++){ for(var j=0;j<ys[i].rows.length;j++){ if(ys[i].rows[j][3]) return true; } } return false; }
+function numWords(num){
+  num=Math.round(Number(num)||0); if(num===0) return "Zero";
+  var a=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+  var b=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+  function two(n){ return n<20?a[n]:(b[Math.floor(n/10)]+(n%10?" "+a[n%10]:"")); }
+  function three(n){ var h=Math.floor(n/100),r=n%100; return h?(a[h]+" Hundred"+(r?" "+two(r):"")):two(r); }
+  var p=[], cr=Math.floor(num/10000000); num%=10000000; var la=Math.floor(num/100000); num%=100000; var th=Math.floor(num/1000); num%=1000;
+  if(cr)p.push(two(cr)+" Crore"); if(la)p.push(two(la)+" Lakh"); if(th)p.push(two(th)+" Thousand"); if(num)p.push(three(num));
+  return p.join(" ").trim();
+}
+function level(){ return gv('f_level'); }
+function titleOf(){ return level()==="PG" ? "Dr." : (gv('f_gender')==="F"?"Ms.":"Mr."); }
+function ident(name,father,addr,pin){
+  var rel=(gv('f_gender')==="F")?"D/o":"S/o";
+  return "<b>"+esc(titleOf())+" "+esc(properCase(name))+" "+rel+" Mr. "+esc(properCase(father))+" R/o "+esc(properCase(addr))+", Pin Code &#8211; "+esc(pin)+"</b>";
+}
+function curFees(){ var lv=level(), b=gv('f_preset'); var f=CFG.fees[lv]||{}; return f[b]||f[Object.keys(f)[0]]||[]; }
+
+/* ---------- letter builders (unchanged format) ---------- */
+function yearBlockHTML(y){
+  var h='<div class="yr">'+esc(y.label)+'</div><table class="fee"><tbody>';
+  h+='<tr class="hdr"><td class="num"></td><td class="h">Head</td><td class="amt">(Fee in Rs.)</td></tr>';
+  for(var j=0;j<y.rows.length;j++){ var r=y.rows[j]; h+='<tr><td class="num">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="amt">'+t1amt(effAmt(r))+'</td></tr>'; }
+  h+='<tr class="tot"><td class="num"></td><td class="totlbl">Total</td><td class="amt">'+t1amt(sumRows(y.rows))+'</td></tr></tbody></table>';
+  return h;
+}
+function buildType1(){
+  var ys=curFees(), lv=level();
+  var name=gv('f_name')||"____________________", father=gv('f_father')||"____________________", addr=gv('f_addr')||"____________________", pin=gv('f_pin')||"______";
+  var course=gv('f_course')||(lv==="PG"?"MD":"MBBS"), counsel=gv('f_counsel'), session=gv('f_session')||"2025-2026", admyr=gv('f_admyr')||"first year", pron=(gv('f_gender')==="F")?"She":"He";
+  var left='', right='';
+  for(var i=0;i<ys.length;i++){ if(i<2) left+=yearBlockHTML(ys[i]); else right+=yearBlockHTML(ys[i]); }
+  var h='';
+  h+='<div class="refrow"><span>'+esc(gv('f_date')||todayStr())+'</span></div>';
+  h+='<div class="title">TO WHOM SO EVER IT MAY CONCERN</div>';
+  if(lv==="PG"){
+    h+='<p class="body">'+ident(name,father,addr,pin)
+      +' has been allotted a seat through '+esc(counsel||"UPNEET PG 2025")+' Counseling of '+esc(course)+' Three years Degree course for session '+esc(session)
+      +' in K. D. Medical College, Hospital &amp; Research Center, Mathura, which is Approved by NMC, Govt. of India, New Delhi '
+      +'and affiliated to Atal Bihari Vajpayee Medical University, Lucknow, Uttar Pradesh. The fee structure is as given below:</p>';
+  } else {
+    h+='<p class="body">'+ident(name,father,addr,pin)
+      +' has been allotted a seat of '+esc(course)+' through '+esc(counsel||"UPNEET 2025")+' counseling. '
+      +pron+' is admitted in '+esc(admyr)+' of this course in the session '+esc(session)
+      +' in K. D. Medical College, Hospital &amp; Research Center, Mathura, which is recognized vide letter no. '
+      +'NMC/MCI-34(41)/2019-Med/020637-65 Date 08th June 2022 by National Medical Commission, New Delhi '
+      +'and A Constituent College of K D University, Mathura, Uttar Pradesh. The Provisional fee structure is as given below:</p>';
+  }
+  h+='<div class="fees">Fees</div><div class="feewrap"><div class="feecol">'+left+'</div><div class="feecol">'+right+'</div></div>';
+  h+='<div class="sign s1'+(lv==="PG"?" pg":"")+'"><div></div><div class="ind">Dean / Principal</div><div>KDMCHRC, Mathura</div></div>';
+  if(lv==="PG"){
+    h+='<div class="note"><div>Note:&nbsp;&nbsp;*This certificate is being issued for the purpose of educational Loan/ withdraw from G.P. F.</div>'
+      +'<div class="l2">* Demand Draft in favour of &quot;K. D. Medical College, Hospital &amp; Research Center, Mathura (U.P.)</div></div>';
+  } else {
+    h+='<div class="note"><div>Note:&nbsp;&nbsp;*This certificate is being issued for the purpose of educational Loan/ withdraw from G.P. F.</div>'
+      +'<div class="l2">*The College has filed an appeal in appellate tribunal for the increment in fee in institute so the final Fee to be paid by candidate will be subject to the outcome of the appeal.</div></div>';
+  }
+  return h;
+}
+function ordinalHTML(yname){ var m={Second:["2","nd"],Third:["3","rd"],Fourth:["4","th"]}[yname]; return m? (m[0]+'<sup>'+m[1]+'</sup>') : "Final"; }
+function findYear(ys,yname){ for(var i=0;i<ys.length;i++){ if(ys[i].year===yname) return ys[i]; } return ys[1]||ys[0]; }
+function bankTable(b){
+  return '<table class="bank"><tbody>'
+    +'<tr><td class="lbl">Name</td><td class="col">:</td><td class="val">'+esc(b.name)+'</td></tr>'
+    +'<tr><td class="lbl">Bank Name</td><td class="col">:</td><td class="val">'+esc(b.bank)+'</td></tr>'
+    +'<tr><td class="lbl">A/C. No.</td><td class="col">:</td><td class="val">'+esc(b.ac)+'</td></tr>'
+    +'<tr><td class="lbl">Branch</td><td class="col">:</td><td class="val">'+esc(b.branch)+'</td></tr>'
+    +'<tr><td class="lbl">RTGS Code</td><td class="col">:</td><td class="val">'+esc(b.rtgs)+'</td></tr>'
+    +'</tbody></table>';
+}
+function buildType2(){
+  var ys=curFees(); var yname=gv('f_year'); var y=findYear(ys,yname);
+  var name=gv('f_name')||"____________________", father=gv('f_father')||"____________________", addr=gv('f_addr')||"____________________", pin=gv('f_pin')||"______";
+  var course=gv('f_course')||"MBBS", batch=(gv('f_preset')||"").split('-')[0]||"2025", lastdate=gv('f_lastdate')||"";
+  var total=sumRows(y.rows), hostel=findHead(y.rows,"hostel"), transferTM=total-hostel;
+  var h='';
+  h+='<div class="refrow t2date"><span>'+esc(gv('f_date')||todayStr())+'</span></div>';
+  h+='<div class="title">TO WHOM SO EVER IT MAY CONCERN</div>';
+  h+='<p class="body">This is to certify that '+ident(name,father,addr,pin)
+    +' is a regular student of '+esc(course)+' Batch '+esc(batch)+'. The fee structure for '+esc(course)+' '+ordinalHTML(yname)+' Year as follows:</p>';
+  h+='<table class="fee2"><tbody><tr class="hdr"><td class="part">Particulars</td><td class="amt2">Amount in Rs</td></tr>';
+  for(var i=0;i<y.rows.length;i++){ h+='<tr><td class="part">'+esc(y.rows[i][1])+'</td><td class="amt2">'+t2amt(effAmt(y.rows[i]))+'</td></tr>'; }
+  h+='<tr class="tot"><td class="part">Total Amount</td><td class="amt2">'+t2amt(total)+'</td></tr></tbody></table>';
+  h+='<div class="inwords">(In Words:- '+numWords(total)+' only/-)</div>';
+  h+='<p class="lastdate">Last date of fee submission on <b>'+esc(lastdate)+'</b>.</p>';
+  h+='<p class="purpose">This certificate is issued for the purpose of Education Loan only.</p>';
+  h+='<div class="sign"><div>Lav Kumar Agrawal</div><div>Office Superintendent</div></div>';
+  h+='<div class="bankhdr">Details of bank A/c for transfer Tuition Fee and Miscellaneous Fee Amount:- '+inComma(transferTM)+'/-</div>'+bankTable(CFG.bank1);
+  h+='<div class="bankhdr">Details of bank A/c for transfer Hostel Fee Amount:- '+t2amt(hostel)+'</div>'+bankTable(CFG.bank2);
+  return h;
+}
+
+/* ---------- UI logic ---------- */
+function buildLetter(){ if(!CFG) return; document.getElementById('letter').innerHTML = (gv('f_type')==="2") ? buildType2() : buildType1(); }
+function toggleType(){
+  var t=gv('f_type'), f1=document.querySelectorAll('.only1'), f2=document.querySelectorAll('.only2'), i;
+  for(i=0;i<f1.length;i++) f1[i].style.display=(t==="1")?"":"none";
+  for(i=0;i<f2.length;i++) f2[i].style.display=(t==="2")?"":"none";
+  if(level()==="PG"){ var u=document.querySelectorAll('.ugonly'); for(i=0;i<u.length;i++) u[i].style.display="none"; }
+  buildLetter();
+}
+function fillBatchOptions(){
+  var sel=document.getElementById('f_preset'); sel.innerHTML="";
+  Object.keys(CFG.fees[level()]||{}).forEach(function(b){ var o=document.createElement('option'); o.value=b; o.textContent=(level()==="PG"?"MD/MS ":"MBBS ")+b; sel.appendChild(o); });
+}
+function onLevel(){
+  var lv=level(), t2=document.getElementById('f_type').options[1];
+  if(lv==="PG"){ t2.disabled=true; if(gv('f_type')==="2") setVal('f_type','1'); document.getElementById('lbl_course').textContent="Course (MD/MS)"; setVal('f_course',"MD "); }
+  else { t2.disabled=false; document.getElementById('lbl_course').textContent="Course"; setVal('f_course',"MBBS"); }
+  fillBatchOptions(); onPreset(); toggleType();
+}
+function onPreset(){
+  var b=gv('f_preset'), lv=level(), y0=(b||"").split('-')[0];
+  setVal('f_session', b);
+  setVal('f_counsel', lv==="PG" ? ("UPNEET PG "+y0) : ("UPNEET "+y0));
+  var occrow=document.querySelector('.pgocc'); if(occrow){ if(!hasOcc()) setVal('f_occ','Double'); occrow.style.display=hasOcc()?"":"none"; }
+  buildLetter();
+}
+function resetForm(){ ['f_name','f_father','f_addr','f_pin'].forEach(function(id){ setVal(id,""); }); setVal('f_gender',"M"); setVal('f_date',todayStr()); setStatus(""); buildLetter(); }
+function setStatus(m,bad){ var e=document.getElementById('status'); e.textContent=m||""; e.className='status'+(bad?' bad':''); }
+
+function printRecord(){
+  var entry={ date:gv('f_date')||todayStr(), level:level(), batch:gv('f_preset'), type:("Type "+gv('f_type')), year:(gv('f_type')==="2"?gv('f_year'):"All Years"), name:properCase(gv('f_name')), course:gv('f_course') };
+  if(!entry.name.trim()){ setStatus("Enter a student name first.", true); return; }
+  if(typeof google!=="undefined" && google.script && google.script.run){
+    google.script.run
+      .withSuccessHandler(function(res){
+        if(res && res.ok){ setStatus("Saved to activity log."); window.print(); }
+        else { setStatus((res&&res.msg)||"Session expired — sign in again.", true); }
+      })
+      .withFailureHandler(function(e){ setStatus("Save error: "+e.message, true); window.print(); })
+      .saveLetter(TOKEN, entry);
+  } else { setStatus("Saving works in the deployed web app. Printing…"); window.print(); }
+}
+
+/* ---------- tabs ---------- */
+function showTab(t){
+  document.getElementById('genView').style.display = (t==='gen')?'':'none';
+  document.getElementById('logView').style.display = (t==='log')?'block':'none';
+  document.getElementById('navGen').className = (t==='gen')?'on':'';
+  document.getElementById('navLog').className = (t==='log')?'on':'';
+  if(t==='log') loadActivity();
+}
+function loadActivity(){
+  var body=document.getElementById('logBody');
+  body.innerHTML='<tr><td colspan="5" class="empty">Loading…</td></tr>';
+  if(typeof google==="undefined" || !google.script || !google.script.run){
+    body.innerHTML='<tr><td colspan="5" class="empty">Activity log is available in the deployed web app.</td></tr>'; return;
+  }
+  google.script.run.withSuccessHandler(function(res){
+    if(!res || !res.ok){ body.innerHTML='<tr><td colspan="5" class="empty">'+esc((res&&res.msg)||'Could not load.')+'</td></tr>'; return; }
+    if(!res.rows.length){ body.innerHTML='<tr><td colspan="5" class="empty">No activity yet.</td></tr>'; return; }
+    var h='';
+    res.rows.forEach(function(r){
+      var cls = r.action==='LETTER'?'letter':(r.action==='LOGIN'?'login':'logout');
+      var det = r.action==='LETTER' ? esc([r.level,r.batch,r.type,r.year].filter(Boolean).join(' · ')) : '—';
+      h+='<tr><td style="white-space:nowrap;color:var(--ink-2)">'+esc(r.ts)+'</td>'
+        +'<td><b>'+esc(r.user)+'</b></td>'
+        +'<td><span class="pill '+cls+'">'+esc(r.action)+'</span></td>'
+        +'<td>'+(r.name?esc(properCase(r.name)):'—')+'</td>'
+        +'<td style="color:var(--ink-2)">'+det+'</td></tr>';
+    });
+    body.innerHTML=h;
+  }).withFailureHandler(function(e){
+    body.innerHTML='<tr><td colspan="5" class="empty">Error: '+esc(e.message)+'</td></tr>';
+  }).getActivity(TOKEN, 300);
+}
+
+/* ---------- auth flow ---------- */
+function doLogin(){
+  var u=gv('l_user'), p=gv('l_pass'), btn=document.getElementById('loginBtn');
+  document.getElementById('l_err').textContent='';
+  if(!u.trim()||!p){ document.getElementById('l_err').textContent='Enter username and password.'; return; }
+  if(typeof google==="undefined" || !google.script || !google.script.run){
+    // local preview: skip auth
+    TOKEN='local'; enterApp('preview', FALLBACK_CFG); return;
+  }
+  btn.disabled=true; btn.textContent='Signing in…';
+  google.script.run.withSuccessHandler(function(res){
+    btn.disabled=false; btn.textContent='Sign in';
+    if(res && res.ok){
+      TOKEN=res.token;
+      try{ sessionStorage.setItem('ll_token', TOKEN); }catch(e){}
+      fetchConfig(res.user);
+    } else {
+      document.getElementById('l_err').textContent=(res&&res.msg)||'Login failed.';
+    }
+  }).withFailureHandler(function(e){
+    btn.disabled=false; btn.textContent='Sign in';
+    document.getElementById('l_err').textContent='Error: '+e.message;
+  }).login(u,p);
+}
+function fetchConfig(user){
+  google.script.run.withSuccessHandler(function(cfg){
+    if(cfg && cfg.auth){ enterApp(cfg.user||user, cfg); }
+    else { document.getElementById('l_err').textContent='Session error — try again.'; }
+  }).withFailureHandler(function(e){
+    document.getElementById('l_err').textContent='Error: '+e.message;
+  }).getConfig(TOKEN);
+}
+function enterApp(user, cfg){
+  CFG=cfg;
+  document.getElementById('whoami').textContent=user;
+  document.getElementById('loginView').style.display='none';
+  document.getElementById('appView').style.display='block';
+  setVal('f_date', todayStr());
+  onLevel();
+  document.querySelectorAll('#f_name,#f_father,#f_addr,#f_pin,#f_date,#f_lastdate,#f_course,#f_counsel,#f_admyr,#f_session').forEach(function(el){ el.addEventListener('input', buildLetter); });
+}
+function doLogout(){
+  if(typeof google!=="undefined" && google.script && google.script.run && TOKEN && TOKEN!=='local'){
+    google.script.run.logout(TOKEN);
+  }
+  TOKEN=null;
+  try{ sessionStorage.removeItem('ll_token'); }catch(e){}
+  document.getElementById('appView').style.display='none';
+  document.getElementById('loginView').style.display='flex';
+  setVal('l_pass','');
+}
+/* resume session if token still valid */
+(function(){
+  var t=null; try{ t=sessionStorage.getItem('ll_token'); }catch(e){}
+  if(t && typeof google!=="undefined" && google.script && google.script.run){
+    google.script.run.withSuccessHandler(function(cfg){
+      if(cfg && cfg.auth){ TOKEN=t; enterApp(cfg.user, cfg); }
+    }).getConfig(t);
+  }
+})();
+</script>
+</body>
+</html>
